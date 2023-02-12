@@ -1,4 +1,3 @@
-
 %%%Solving ODE - Resistance against radial conduction in a sphere (BCs not specified)
 %%%Author: Dr. Hamidreza Najafi, Florida Institute of Technology
 %%% 1/26/2023

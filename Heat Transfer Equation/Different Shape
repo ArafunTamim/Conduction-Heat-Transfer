@@ -1,0 +1,12 @@
+#Shape with boundary condition
+
+syms T(r)
+syms rin rout TH TC k
+ode = diff(r^2*diff(T,r));
+
+cond1 = T(rin) == TH;
+cond2 = T(rout) == TC;
+cond = [cond1 cond2];
+Tsol(r) = dsolve(ode, cond);
+Tsol = simplify(Tsol)
+pretty (Tsol) 

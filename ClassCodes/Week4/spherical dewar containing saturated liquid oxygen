@@ -1,0 +1,62 @@
+%1C
+clear
+close all
+
+% Given parameters
+T_LOx = 95.6; % Temperature of liquid Oxygen (K)
+
+h_bar_in = 150; % Heat transfer coefficient for inner wall (W/m2K)
+r_mil_in = 0.1; % Inner radius of the inner metal liner (m)
+th_m = 2.5*10^(-3); % Thickness of the inner metal liner (m)
+
+eps = 0.7; % emissivity
+sigma = 5.67*10^(-8); % Stefan-Boltzmann constant (W/m2K4)
+T_inf = 20 + 273; % Temperature of surroundings (K)
+R_c = 0.003; % Specific contact resistance (K-m2/W)
+k_ins = 330/1000000*100; % Mean conductivity of insulation (W/mK)
+
+k_m = 15; % Conductivity of metal (W/mK)
+h_bar_out = 6; % Heat transfer coefficient between outer wall and surrounding air (W/m2K)
+
+% Calculating convection resistance to liquid oxygen
+R_conv_in = 1 / (h_bar_in * 4 * pi * r_mil_in^2); % Convection resistance to liquid oxygen (K/W)
+
+r_ins_in = r_mil_in + th_m; % Inner radius of insulation
+R_cond_mil = (1/r_mil_in-1/r_ins_in) / (4*pi*k_m); % Conduction resistance of inner metal liner (K/W)
+
+R_c_ins_mil = R_c / (4*pi*r_ins_in^2);           % Calculating contact resistance between inner material liner and insulation
+
+i = 1;
+for th_ins = 0.001:0.001:0.1    % thickness of insulation (m)
+    r_ins_out = r_ins_in + th_ins; % outer radius of insulation
+    R_cond_ins = (1/r_ins_in -1/r_ins_out) / (4*pi*k_ins); % conduction resistance of insulation (K/W)
+    R_c_ins_mlo = R_c / (2*pi*r_ins_out^2); % contact resistance between insulation and outer metal liner
+
+    r_mlo_out = r_ins_out + th_m; % outer radius of outer metal liner
+    R_cond_mlo = (1/r_ins_out-1/r_mlo_out) / (4*pi*k_m); % conduction resistance of outer metal liner
+    R_conv_out = 1 / (4 * pi * r_mlo_out^2*h_bar_out); % convection resistance to surrounding air
+
+    T_s_out = (T_LOx + T_inf) / 2;
+    T_er = 1;
+    j=0;
+    while T_er > 0.01
+        
+        R_rad = 1 / (4*pi*r_mlo_out^2*sigma*eps*(T_s_out^2+T_inf^2)*(T_s_out+T_inf)); 
+        R_tot = R_conv_in + R_cond_mil + R_c_ins_mil + R_cond_ins + R_c_ins_mlo + R_cond_mlo + (1/R_conv_out + 1/R_rad)^(-1);
+
+        q_dot = (T_inf - T_LOx) / R_tot;
+        T_s_out_updated = T_LOx + q_dot * (R_conv_in + R_cond_mil + R_c_ins_mil + R_cond_ins + R_c_ins_mlo + R_cond_mlo);
+        T_er = (T_s_out_updated -T_s_out) / T_s_out_updated;
+        T_s_out = T_s_out_updated;
+        j=j+1
+    end
+    
+    q_dot_vec(i) = q_dot
+    i=i+1;
+end
+th_ins = 0.001:0.001:0.1;
+plot(th_ins, q_dot_vec)
+grid on
+xlabel('Insulation Thickness, m')
+ylabel('Heat Transfer Rate, W')
+
